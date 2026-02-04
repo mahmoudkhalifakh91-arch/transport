@@ -357,6 +357,7 @@ const App: React.FC = () => {
               onNotify={notify}
               canEdit={canEdit}
               lang={lang} 
+              selectedMaterial={selectedMaterial}
             />
           )}
           {activeTab === 'dashboard' && (

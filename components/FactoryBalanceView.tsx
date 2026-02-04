@@ -11,43 +11,54 @@ interface Props {
   onNotify: (message: string, type: ToastType) => void;
   canEdit: boolean;
   lang: string;
+  selectedMaterial: 'soy' | 'maize' | null;
 }
 
-const FactoryBalanceView: React.FC<Props> = ({ releases, records, factoryBalances, onNotify, canEdit, lang }) => {
+const FactoryBalanceView: React.FC<Props> = ({ releases, records, factoryBalances, onNotify, canEdit, lang, selectedMaterial }) => {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [tempBalance, setTempBalance] = useState<Partial<FactoryBalance>>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // تحديد المادة المطلوبة بناءً على القسم المختار
+  const activeMaterialName = selectedMaterial === 'soy' ? 'صويا' : 'ذرة';
+
   const data = useMemo(() => {
     const summary: Record<string, any> = {};
 
+    // استخراج المواقع المرتبطة فقط بالقسم الحالي
     const allSites = new Set<string>();
     releases.forEach(r => allSites.add(String(r.siteName).trim()));
     records.forEach(r => allSites.add(String(r.unloadingSite).trim()));
 
     allSites.forEach(site => {
-      ['صويا', 'ذرة'].forEach(material => {
-        const key = `${site}||${material}`;
-        const manual = factoryBalances.find(fb => fb.siteName === site && String(fb.goodsType).includes(material));
+      // معالجة المادة النشطة فقط في هذا القسم
+      const material = activeMaterialName;
+      const key = `${site}||${material}`;
+      
+      const manual = factoryBalances.find(fb => 
+        fb.siteName === site && String(fb.goodsType).includes(material)
+      );
 
-        const totalReleased = releases
-          .filter(r => String(r.siteName).trim() === site && String(r.goodsType).includes(material))
-          .reduce((sum, r) => sum + Number(r.totalQuantity || 0), 0);
+      const totalReleased = releases
+        .filter(r => String(r.siteName).trim() === site && String(r.goodsType).includes(material))
+        .reduce((sum, r) => sum + Number(r.totalQuantity || 0), 0);
 
-        const totalArrived = records
-          .filter(r => String(r.unloadingSite).trim() === site && String(r.goodsType).includes(material) && r.status === OperationStatus.DONE)
-          .reduce((sum, r) => sum + Number(r.weight || 0), 0);
+      const totalArrived = records
+        .filter(r => String(r.unloadingSite).trim() === site && String(r.goodsType).includes(material) && r.status === OperationStatus.DONE)
+        .reduce((sum, r) => sum + Number(r.weight || 0), 0);
 
-        const inTransit = records
-          .filter(r => String(r.unloadingSite).trim() === site && String(r.goodsType).includes(material) && r.status === OperationStatus.IN_PROGRESS)
-          .reduce((sum, r) => sum + Number(r.weight || 0), 0);
+      const inTransit = records
+        .filter(r => String(r.unloadingSite).trim() === site && String(r.goodsType).includes(material) && r.status === OperationStatus.IN_PROGRESS)
+        .reduce((sum, r) => sum + Number(r.weight || 0), 0);
 
-        const opening = manual?.openingBalance || 0;
-        const spending = manual?.manualConsumption || 0;
+      const opening = manual?.openingBalance || 0;
+      const spending = manual?.manualConsumption || 0;
 
-        const releaseRemaining = totalReleased - totalArrived - inTransit;
-        const factoryStock = opening + totalArrived - spending;
+      const releaseRemaining = totalReleased - totalArrived - inTransit;
+      const factoryStock = opening + totalArrived - spending;
 
+      // لا تظهر المواقع التي ليس لها أي بيانات (إفراج أو رصيد أو حركة)
+      if (totalReleased > 0 || opening > 0 || totalArrived > 0 || inTransit > 0) {
         summary[key] = {
           site,
           material,
@@ -59,11 +70,11 @@ const FactoryBalanceView: React.FC<Props> = ({ releases, records, factoryBalance
           releaseRemaining,
           factoryStock
         };
-      });
+      }
     });
 
     return Object.values(summary);
-  }, [releases, records, factoryBalances]);
+  }, [releases, records, factoryBalances, activeMaterialName]);
 
   const handleEdit = (item: any) => {
     if (!canEdit) return;
@@ -186,11 +197,11 @@ const FactoryBalanceView: React.FC<Props> = ({ releases, records, factoryBalance
   return (
     <div className="animate-in fade-in duration-700 w-full overflow-hidden">
       <div className="flex flex-row-reverse items-center gap-4 mb-8">
-        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg flex-shrink-0 ${selectedMaterial === 'soy' ? 'bg-emerald-600' : 'bg-amber-600'}`}>
           <i className="fas fa-industry text-xl"></i>
         </div>
         <div className="text-right">
-          <h2 className="text-xl md:text-2xl font-black text-slate-800">رصيد المصانع والإفراجات</h2>
+          <h2 className="text-xl md:text-2xl font-black text-slate-800">رصيد المصانع والإفراجات - قسم {activeMaterialName}</h2>
           <div className="space-y-1 mt-1">
             <p className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
                 <span className="text-indigo-600 ml-2">متبقي الإفراج = إجمالي الإفراج - تم تحميله - في الطريق</span>
@@ -202,8 +213,11 @@ const FactoryBalanceView: React.FC<Props> = ({ releases, records, factoryBalance
       </div>
 
       <div className="w-full">
-        <TableSection title="قسم خامات الصويا" items={data.filter(d => d.material === 'صويا')} colorClass="bg-emerald-600" />
-        <TableSection title="قسم خامات الذرة" items={data.filter(d => d.material === 'ذرة')} colorClass="bg-amber-600" />
+        <TableSection 
+          title={`تقرير أرصدة ${activeMaterialName}`} 
+          items={data} 
+          colorClass={selectedMaterial === 'soy' ? 'bg-emerald-600' : 'bg-amber-600'} 
+        />
       </div>
     </div>
   );
