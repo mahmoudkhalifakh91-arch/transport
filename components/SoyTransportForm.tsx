@@ -78,7 +78,7 @@ const SoyTransportForm: React.FC<Props> = ({ existingData = [], masterData, rele
     return Math.max(0, totalReleased - totalConsumed);
   }, [formData.unloadingSite, formData.orderNo, releases, existingData, editRecord]);
 
-  const isWeightValid = availableBalance === null || formData.weight === 0 || (formData.weight || 0) <= availableBalance;
+  const isWeightValid = availableBalance === null || formData.weight === 0 || (formData.weight || 0) <= (availableBalance + 0.1);
 
   const carSuggestions = useMemo(() => Array.from(new Set([...(masterData.cars || []), ...(existingData || []).map(r => r.carNumber)])), [existingData, masterData]);
   const driverSuggestions = useMemo(() => Array.from(new Set([...(masterData.drivers || []), ...(existingData || []).map(r => r.driverName)])), [existingData, masterData]);
@@ -102,7 +102,7 @@ const SoyTransportForm: React.FC<Props> = ({ existingData = [], masterData, rele
     return Object.keys(grouped).map(orderNo => ({
       value: orderNo,
       label: `أمر توريد: ${orderNo}`,
-      subLabel: `الكمية: ${grouped[orderNo].total.toLocaleString()} طن | بتاريخ: ${grouped[orderNo].date}`
+      subLabel: `الكمية المتاحة: ${grouped[orderNo].total.toLocaleString()} طن`
     }));
   }, [formData.unloadingSite, releases]);
 
@@ -152,20 +152,26 @@ const SoyTransportForm: React.FC<Props> = ({ existingData = [], masterData, rele
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">
             <div className="flex flex-col gap-2"><label className="text-xs font-black text-slate-500 uppercase text-right">{t.date}</label><input required type="date" name="date" value={formData.date} onChange={handleChange} className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none" /></div>
-            <div className="flex flex-col gap-2"><label className="text-xs font-black text-slate-500 uppercase text-right">وقت الخروج</label><input required type="time" name="departureTime" value={formData.departureTime} onChange={handleChange} className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none" /></div>
+            <div className="flex flex-col gap-2">
+               <label className="text-xs font-black text-slate-500 uppercase text-right">حالة النقلة</label>
+               <select name="status" value={formData.status} onChange={handleChange} className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none">
+                  <option value={OperationStatus.IN_PROGRESS}>جاري التنفيذ</option>
+                  <option value={OperationStatus.DONE}>تمت (وصلت)</option>
+                  <option value={OperationStatus.STOPPED}>متوقفة / عطل</option>
+               </select>
+            </div>
             <AutocompleteInput label="رقم السيارة" name="carNumber" value={formData.carNumber || ''} onChange={handleChange} suggestions={carSuggestions} placeholder="أ ب ج 123" required />
             <AutocompleteInput label="السائق" name="driverName" value={formData.driverName || ''} onChange={handleChange} suggestions={driverSuggestions} placeholder="الاسم" required />
             <div className="flex flex-col gap-2"><label className="text-xs font-black text-slate-500 uppercase text-right">هاتف السائق</label><input required type="tel" name="driverPhone" value={formData.driverPhone} onChange={handleChange} placeholder="05xxxxxxxxx" className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none" /></div>
             
-            {/* موقع التعتيق وأمر التوريد - ترتيب جديد بعد رقم الهاتف */}
-            <AutocompleteInput label="موقع التعتيق" name="unloadingSite" value={formData.unloadingSite || ''} onChange={handleChange} suggestions={unloadingSuggestions} placeholder="اختر موقع التعتيق" required />
+            <AutocompleteInput label="موقع التعتيق" name="unloadingSite" value={formData.unloadingSite || ''} onChange={handleChange} suggestions={unloadingSuggestions} placeholder="موقع التعتيق" required />
             <AutocompleteInput 
                 label="رقم أمر التوريد" 
                 name="orderNo" 
                 value={formData.orderNo || ''} 
                 onChange={handleChange} 
                 suggestions={orderSuggestions} 
-                placeholder={formData.unloadingSite ? "اختر من التوريدات المتاحة" : "يرجى اختيار الموقع أولاً"} 
+                placeholder={formData.unloadingSite ? "اختر التوريد" : "اختر الموقع أولاً"} 
                 required 
             />
 
@@ -182,13 +188,7 @@ const SoyTransportForm: React.FC<Props> = ({ existingData = [], masterData, rele
           
           <div className="flex flex-col gap-2">
              <label className="text-xs font-black text-slate-500 uppercase text-right">ملاحظات</label>
-             <textarea 
-               name="notes" 
-               value={formData.notes || ''} 
-               onChange={handleChange} 
-               placeholder="أضف ملاحظاتك هنا..." 
-               className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none min-h-[100px] resize-none"
-             />
+             <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="ملاحظات..." className="w-full bg-slate-50 border-none p-5 rounded-2xl font-bold outline-none min-h-[100px] resize-none" />
           </div>
 
           <div className="flex flex-row-reverse justify-between items-center pt-12 border-t border-slate-50 no-print">

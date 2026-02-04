@@ -25,6 +25,21 @@ interface Distribution {
   quantity: number;
 }
 
+// دالة مساعدة لتنسيق التاريخ
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '--';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const ReleasesManager: React.FC<Props> = ({ releases, records, masterData, onRefresh, onNotify, t, lang, selectedMaterial, currentUser }) => {
   const formRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -217,7 +232,7 @@ const ReleasesManager: React.FC<Props> = ({ releases, records, masterData, onRef
            <div className="bg-indigo-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">{releases.length} إفراج مسجل</div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-center">
+          <table className="w-full text-center border-collapse min-w-[1200px]">
             <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
               <tr>
                 <th className="p-6">تاريخ الإفراج</th>
@@ -235,7 +250,7 @@ const ReleasesManager: React.FC<Props> = ({ releases, records, masterData, onRef
                   <td className="p-6">
                     <div className="flex items-center justify-center gap-2 font-bold text-slate-500 text-xs">
                         <i className="far fa-calendar-alt opacity-40"></i>
-                        {String(rel.date || '').split('T')[0]}
+                        {formatDate(rel.date)}
                     </div>
                   </td>
                   <td className="p-6 font-black text-slate-800 text-sm">{rel.releaseNo}</td>

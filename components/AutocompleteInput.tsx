@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 export interface SuggestionItem {
-  value: string;
+  value: string | number;
   label: string;
   subLabel?: string;
 }
@@ -10,9 +10,9 @@ export interface SuggestionItem {
 interface Props {
   label: string;
   name: string;
-  value: string;
+  value: string | number;
   onChange: (e: any) => void;
-  suggestions: (string | SuggestionItem)[];
+  suggestions: (string | number | SuggestionItem)[];
   placeholder: string;
   required?: boolean;
 }
@@ -21,16 +21,24 @@ const AutocompleteInput: React.FC<Props> = ({ label, name, value, onChange, sugg
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const getLabel = (s: string | SuggestionItem) => typeof s === 'string' ? s : s.label;
-  const getValue = (s: string | SuggestionItem) => typeof s === 'string' ? s : s.value;
-  const getSubLabel = (s: string | SuggestionItem) => typeof s === 'string' ? null : s.subLabel;
+  const getLabel = (s: string | number | SuggestionItem) => 
+    typeof s === 'object' && s !== null ? s.label : String(s);
+    
+  const getValue = (s: string | number | SuggestionItem) => 
+    typeof s === 'object' && s !== null ? s.value : String(s);
+    
+  const getSubLabel = (s: string | number | SuggestionItem) => 
+    typeof s === 'object' && s !== null ? s.subLabel : null;
+
+  // تحويل القيمة الحالية إلى نص للتعامل معها بشكل آمن
+  const stringValue = String(value || '');
 
   // إظهار كافة المقترحات إذا كان الحقل فارغاً، أو الفلترة بناءً على ما كتبه المستخدم
   const filtered = suggestions.filter(s => {
-    if (!value) return true;
-    const searchStr = getValue(s).toLowerCase();
-    return searchStr.includes(value.toLowerCase());
-  }).slice(0, 30); // زيادة عدد العناصر الظاهرة لسهولة الاختيار
+    if (!stringValue) return true;
+    const itemValue = String(getValue(s)).toLowerCase();
+    return itemValue.includes(stringValue.toLowerCase());
+  }).slice(0, 30);
 
   useEffect(() => {
     const click = (e: any) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
@@ -65,7 +73,6 @@ const AutocompleteInput: React.FC<Props> = ({ label, name, value, onChange, sugg
               <div 
                 key={i} 
                 onMouseDown={(e) => {
-                  // استخدام onMouseDown لمنع فقدان التركيز قبل الاختيار
                   e.preventDefault();
                   onChange({ target: { name, value: getValue(s) }}); 
                   setShow(false); 
@@ -76,13 +83,13 @@ const AutocompleteInput: React.FC<Props> = ({ label, name, value, onChange, sugg
                   <span className="font-black text-sm text-gray-800 group-hover:text-indigo-600">{getLabel(s)}</span>
                   {getSubLabel(s) && (
                      <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                       {getSubLabel(s).split('|')[0]}
+                       {String(getSubLabel(s)).split('|')[0]}
                      </span>
                   )}
                 </div>
                 {getSubLabel(s) && (
                   <div className="text-[9px] font-bold text-gray-400 group-hover:text-indigo-400">
-                    {getSubLabel(s).includes('|') ? getSubLabel(s).split('|')[1] : ''}
+                    {String(getSubLabel(s)).includes('|') ? String(getSubLabel(s)).split('|')[1] : ''}
                   </div>
                 )}
               </div>

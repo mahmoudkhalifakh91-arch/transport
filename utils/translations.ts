@@ -95,7 +95,16 @@ export const translations = {
     saveFinal: "حفظ البيانات نهائياً",
     items: "عنصر",
     name: "الاسم",
-    add: "إضافة"
+    add: "إضافة",
+
+    // Master Data Categories (Fixing missing keys used in MasterDataUpload.tsx)
+    drivers: "السائقين",
+    cars: "السيارات",
+    contractors: "المقاولين",
+    orders: "أوامر التوريد",
+    loadingSites: "مواقع التحميل",
+    unloadingSites: "مواقع التفريغ",
+    goodsTypes: "أنواع البضائع"
   },
   en: {
     appName: "Transport Management System",
@@ -186,7 +195,16 @@ export const translations = {
     saveFinal: "Save Changes",
     items: "items",
     name: "Name",
-    add: "Add"
+    add: "Add",
+
+    // Master Data Categories (Fixing missing keys used in MasterDataUpload.tsx)
+    drivers: "Drivers",
+    cars: "Cars",
+    contractors: "Contractors",
+    orders: "Orders",
+    loadingSites: "Loading Sites",
+    unloadingSites: "Unloading Sites",
+    goodsTypes: "Goods Types"
   }
 };
 
