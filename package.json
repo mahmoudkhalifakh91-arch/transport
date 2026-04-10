@@ -1,8 +1,7 @@
-
 {
-  "name": "glasspos-smart-ai-system",
+  "name": "حركة-نقل-الخامات-الرئيسية",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,25 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-router-dom": "^7.1.1",
-    "lucide-react": "^0.471.0",
-    "framer-motion": "^11.15.0",
-    "recharts": "^2.15.0",
-    "xlsx": "^0.18.5",
-    "exceljs": "^4.4.0",
-    "file-saver": "^2.0.5",
-    "firebase": "^11.0.1",
-    "@google/genai": "^0.3.1"
+    "@google/genai": "^1.39.0",
+    "firebase": "^12.8.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@types/react": "19.0.0",
-    "@types/react-dom": "19.0.0",
     "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0",
-    "@types/file-saver": "^2.0.7"
+    "vite": "^6.2.0"
   }
 }
